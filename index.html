@@ -338,10 +338,13 @@
       </div>
     </div>
 
-    <!-- Botón pagar -->
-    <a href="https://link.mercadopago.com.ar/ferialaemilia" target="_blank" class="btn-pagar">
-      💳 Pagar ahora
-    </a>
+    <!-- Botón pagar — copia alias al portapapeles -->
+    <button onclick="copiarAlias()" class="btn-pagar" id="btn-pagar">
+      💳 Pagar con cualquier billetera
+    </button>
+    <div id="alias-copiado" style="display:none;text-align:center;background:rgba(61,153,112,.2);border:1px solid var(--verde-claro);border-radius:10px;padding:10px 14px;font-size:.85rem;color:var(--verde-claro);">
+      ✅ Alias <strong>ferialaemilia</strong> copiado.<br>Abrí tu billetera (MP, Modo, Ualá, etc.) y pegalo en "Transferir".
+    </div>
 
     <!-- Mensaje comprobante -->
     <p class="canon-msg">Una vez realizado el pago, enviá el comprobante por WhatsApp</p>
@@ -656,10 +659,25 @@ let edicionActiva = 'Junio 2026';
 // ── API ──────────────────────────────────────────────────────
 async function apiGuardarInscripto(ins) {
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({...ins, edicion: edicionActiva})
+    const params = new URLSearchParams({
+      accion: 'guardar_inscripto',
+      edicion: edicionActiva,
+      id: ins.id,
+      nombre: ins.nombre,
+      apellido: ins.apellido,
+      emp: ins.emp,
+      tel: ins.tel || '',
+      rubro: ins.rubro,
+      tamaño: ins.tamaño,
+      gazebo: ins.gazebo ? 'Si' : 'No',
+      barrio: ins.barrio,
+      esLocal: ins.esLocal ? 'Si' : 'No',
+      zona: ins.zona,
+      zonaOk: ins.zonaOk ? 'Si' : 'No',
+      puesto: ins.puesto,
+      obs: ins.obs || ''
     });
+    const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
     const data = await res.json();
     return data.ok;
   } catch(e) { console.error('Error guardando:', e); return false; }
@@ -689,10 +707,13 @@ async function apiEliminar(id) {
 
 async function apiMarcarPago(id, pagado) {
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({tipo:'marcar_pago', edicion:edicionActiva, id, pagado})
+    const params = new URLSearchParams({
+      accion: 'marcar_pago',
+      edicion: edicionActiva,
+      id: id,
+      pagado: pagado ? 'Si' : 'No'
     });
+    await fetch(`${SCRIPT_URL}?${params.toString()}`);
   } catch(e) { console.error('Error marcando pago:', e); }
 }
 
@@ -1361,6 +1382,34 @@ function dibujarMinimapa(puestoAsignado, rubro) {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillText('Tu puesto: N° ' + puestoAsignado, 26, H-18);
+}
+
+function copiarAlias() {
+  const alias = 'ferialaemilia';
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(alias).then(() => mostrarAliasCopiado());
+  } else {
+    // Fallback para navegadores sin clipboard API
+    const el = document.createElement('textarea');
+    el.value = alias;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    mostrarAliasCopiado();
+  }
+}
+
+function mostrarAliasCopiado() {
+  const btn = document.getElementById('btn-pagar');
+  const aviso = document.getElementById('alias-copiado');
+  if(btn) { btn.textContent = '✅ ¡Alias copiado!'; btn.style.background = '#27ae60'; }
+  if(aviso) aviso.style.display = 'block';
+  setTimeout(() => {
+    if(btn) { btn.innerHTML = '💳 Pagar con cualquier billetera'; btn.style.background = ''; }
+  }, 4000);
 }
 
 function switchView(view,btn){
