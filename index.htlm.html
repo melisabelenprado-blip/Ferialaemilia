@@ -917,6 +917,17 @@ function zonaDePuesto(p){
   for(const[k,z]of Object.entries(ZONAS)){if(k!=='ninguna'&&z.puestos.includes(p))return k;}
   return 'ninguna';
 }
+// Distancia euclidiana real entre dos puestos usando coordenadas del mapa
+function distanciaReal(p1, p2) {
+  const a = POS[p1], b = POS[p2];
+  if(!a || !b) return 9999;
+  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+}
+
+// Umbral de distancia mínima entre rubros de la misma familia (en px del mapa 500x500)
+// ~80px equivale a aprox 2 puestos de distancia física
+const DISTANCIA_MIN_RUBRO = 90;
+
 // Vecinos geográficos entre distintos bordes (esquinas y puntos de contacto)
 const VECINOS_EXTRA = {
   // Esquina NE: norte-este
@@ -972,10 +983,10 @@ function familiaRubro(rubro) {
 
 function puntaje(puesto, rubro){
   const familiaActual = familiaRubro(rubro);
-  return vecinosCercanos(puesto)
-    .map(p => inscriptos.find(i=>i.puesto===p))
-    .filter(Boolean)
-    .filter(i => familiaRubro(i.rubro) === familiaActual)
+  // Contar cuántos inscriptos de la misma familia están a menos de DISTANCIA_MIN_RUBRO px
+  return inscriptos
+    .filter(i => i.puesto > 0 && familiaRubro(i.rubro) === familiaActual)
+    .filter(i => distanciaReal(puesto, i.puesto) < DISTANCIA_MIN_RUBRO)
     .length;
 }
 // Puestos amplios: centro (60-70) y ubicaciones específicas grandes
@@ -984,31 +995,24 @@ const PUESTOS_AMPLIOS = new Set([60,61,62,63,64,65,66,67,68,69,70,23,28,15,16,1,
 function esGrande(tamaño){ return tamaño==='grande'||tamaño==='extragrande'; }
 
 function puntajeConTamaño(puesto, rubro, tamaño){
-  const conflictoRubro = puntaje(puesto, rubro);
-  const esAmplio = PUESTOS_AMPLIOS.has(puesto);
-
-  let bonusTamaño = 0;
-
-  // Preferir puestos amplios para tamaños grandes
-  if(esGrande(tamaño) && esAmplio)  bonusTamaño -= 2;
-  if(esGrande(tamaño) && !esAmplio) bonusTamaño += 1;
-
-  // Penalizar si hay muchos puestos grandes cerca (distribución por espacio)
-  if(esGrande(tamaño)) {
-    const vecinos = vecinosCercanos(puesto)
-      .map(p => inscriptos.find(i=>i.puesto===p))
-      .filter(Boolean);
-    const grandesVecinos = vecinos.filter(i => esGrande(i.tamaño)).length;
-    bonusTamaño += grandesVecinos * 2; // penalizar acumulación de grandes
-  }
-
-  return conflictoRubro + bonusTamaño;
+  // Mantenida por compatibilidad — la lógica principal está en scorer de asignarPuestoDesdeLibres
+  return puntaje(puesto, rubro);
 }
 
 // Versión principal — usa lista de libres reales pasada como parámetro
 function asignarPuestoDesdeLibres(libres, rubro, zona, tamaño){
   if(!libres.length) return {puesto:null, zonaOk:false};
-  const scorer = (p) => puntajeConTamaño(p, rubro, tamaño);
+  const scorer = (p) => {
+    const conflicto = puntaje(p, rubro) * 10;
+    const esAmplio = PUESTOS_AMPLIOS.has(p);
+    let penTam = 0;
+    if(esGrande(tamaño) && esAmplio) penTam = -2;
+    if(esGrande(tamaño) && !esAmplio) penTam = 1;
+    if(esGrande(tamaño)) {
+      penTam += inscriptos.filter(i=>i.puesto>0&&esGrande(i.tamaño)).filter(i=>distanciaReal(p,i.puesto)<DISTANCIA_MIN_RUBRO).length * 2;
+    }
+    return conflicto + penTam;
+  };
   if(zona && zona!=='ninguna'){
     const enZona = libres.filter(p=>zonaDePuesto(p)===zona);
     if(enZona.length){
@@ -1302,7 +1306,11 @@ function renderTabla(){
       <td><span class="badge-size">${TAMANOS[i.tamaño]||i.tamaño}</span></td>
       <td>${i.gazebo?'✅':'—'}</td><td>${zBadge}</td><td>${i.tel||'—'}</td>
       <td>${i.esLocal ? '<span style="background:#e3f5ed;color:#1a6645;border:1px solid #a8dfc4;padding:2px 7px;border-radius:5px;font-size:.68rem;font-weight:600;">📍 Local</span>' : '<span style="font-size:.78rem;color:#9ca3af;">'+formatBarrio(i.barrio)+'</span>'}</td>
-      <td style="max-width:140px;font-size:.74rem;color:#6b7280;line-height:1.4;">${i.obs ? `<span title="${i.obs}">${i.obs.length>60?i.obs.substring(0,60)+'...':i.obs}</span>` : '<span style="color:#ddd">—</span>'}</td>
+      <td style="max-width:180px;font-size:.74rem;color:#6b7280;line-height:1.4;">
+        ${i.obs
+          ? `<span style="cursor:pointer;display:block;" onclick="this.style.whiteSpace=this.style.whiteSpace==='normal'?'nowrap':'normal';this.style.maxWidth=this.style.maxWidth==='180px'?'300px':'180px';" title="Click para expandir">${i.obs.length>50?i.obs.substring(0,50)+'…':i.obs}</span>`
+          : '<span style="color:#ddd">—</span>'}
+      </td>
       <td style="text-align:center;">
         <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
           <input type="checkbox" ${i.pagado?'checked':''} 
