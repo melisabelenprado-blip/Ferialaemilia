@@ -306,15 +306,15 @@
     <!-- DISPLAY -->
     <div class="banner-display" id="banner-display">
       <div class="info-grid">
-        <div class="info-item"><span class="ii">📅</span><div><strong>Fecha</strong><span id="d-fecha">Sábado 13 de junio de 2026</span></div></div>
+        <div class="info-item"><span class="ii">📅</span><div><strong>Fecha</strong><span id="d-fecha">Domingo 12 de julio de 2026</span></div></div>
         <div class="info-item"><span class="ii">📍</span><div><strong>Lugar</strong><span id="d-lugar">Plaza de la Emilia — Fray Luis Beltrán esq. Emilia Córdova</span></div></div>
         <div class="info-item"><span class="ii">🕑</span><div><strong>Armado y horario</strong><span id="d-horario">Armado desde las 14:00 hs. La feria comienza a las 15:00 hs.</span></div></div>
         <div class="info-item"><span class="ii">🪑</span><div><strong>Cada emprendedor lleva</strong><span id="d-llevar">Mesa, mantel, gazebo (si usa), reposera y todo lo necesario para su puesto.</span></div></div>
         <div class="info-item"><span class="ii">🍔</span><div><strong>Gastronomía</strong><span id="d-gastro">Obligatorio presentar carnet de manipulación de alimentos.</span></div></div>
         <div class="info-item"><span class="ii">🏷️</span><div><strong>Reventa</strong><span id="d-reventa">Todos los productos de reventa deben llevar sticker o etiqueta con el logo del emprendimiento.</span></div></div>
         <div class="info-item"><span class="ii">📝</span><div><strong>Notas adicionales</strong><span id="d-notas">La plaza cuenta con 70 puestos. Se asignan automáticamente al inscribirse.</span></div></div>
-        <div class="info-item"><span class="ii">⏰</span><div><strong>Inscripción prioritaria (locales)</strong><span id="d-apertura-local">Desde el 1 de junio a las 8:00 hs</span></div></div>
-        <div class="info-item"><span class="ii">🌐</span><div><strong>Inscripción general</strong><span id="d-apertura-general">Desde el 3 de junio a las 8:00 hs</span></div></div>
+        <div class="info-item"><span class="ii">⏰</span><div><strong>Inscripción prioritaria (locales)</strong><span id="d-apertura-local">Desde el 1 de julio a las 8:00 hs</span></div></div>
+        <div class="info-item"><span class="ii">🌐</span><div><strong>Inscripción general</strong><span id="d-apertura-general">Desde el 5 de julio a las 8:00 hs</span></div></div>
       </div>
     </div>
 
@@ -536,7 +536,7 @@
   <div class="admin-header">
     <div>
       <h2>Panel de administración</h2>
-      <p style="color:var(--gris);font-size:.78rem;margin-top:2px">Feria de la Emilia · Sábado 13 de junio</p>
+      <p style="color:var(--gris);font-size:.78rem;margin-top:2px">Feria de la Emilia · Domingo 12 de julio</p>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn-exportar" style="background:#3d9970;" onclick="abrirEditorBanner()">✏️ Editar info pública</button>
@@ -548,7 +548,7 @@
     <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--gris);">Edición activa:</label>
     <select id="sel-edicion" onchange="cambiarEdicion(this.value)"
       style="border:1.5px solid #e2e2de;border-radius:9px;padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:.88rem;background:white;cursor:pointer;outline:none;">
-      <option value="Junio 2026">Junio 2026</option>
+      <option value="Julio 2026">Julio 2026</option>
     </select>
     <button onclick="nuevaEdicion()" style="padding:7px 14px;background:white;border:1.5px solid var(--verde);color:var(--verde);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;">+ Nueva edición</button>
     <button onclick="cargarDesdeSheets(edicionActiva)" style="padding:7px 14px;background:white;border:1.5px solid #ddd;color:var(--gris);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;cursor:pointer;">↻ Actualizar</button>
@@ -688,8 +688,8 @@ const POS={};
 [66,67,68,69,70].forEach((n,i)=>{POS[n]={x:250,y:292+(i*26)};});
 
 let inscriptos=[], filtroActivo='todos', zonaSeleccionada='ninguna';
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvXemhp2hed8ovzYP97PjCp7tu3jRBVSmCg-aL2un3yfWRm7DVjWSEmwYPBPup5bPGKg/exec';
-let edicionActiva = 'Junio 2026';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJIwx_A8qjlV9mnn5zkgsuf9zBs4UgffTRawJchwcdei24pJzysQG0tbU3Df4AGrOygg/exec';
+let edicionActiva = 'Julio 2026';
 
 // ── API ──────────────────────────────────────────────────────
 async function apiGuardarInscripto(ins) {
@@ -698,20 +698,21 @@ async function apiGuardarInscripto(ins) {
       accion: 'guardar_inscripto',
       edicion: edicionActiva,
       id: ins.id,
-      nombre: ins.nombre,
-      apellido: ins.apellido,
-      emp: ins.emp,
+      nombre: ins.nombre || '',
+      apellido: ins.apellido || '',
+      emp: ins.emp || '',
       tel: ins.tel || '',
-      rubro: ins.rubro,
-      tamaño: ins.tamaño,
+      rubro: ins.rubro || '',
+      tamanio: ins.tamaño || ins.tamanio || '',
       gazebo: ins.gazebo ? 'Si' : 'No',
-      barrio: ins.barrio,
+      barrio: ins.barrio || '',
       esLocal: ins.esLocal ? 'Si' : 'No',
-      zona: ins.zona,
+      zona: ins.zona || 'ninguna',
       zonaOk: ins.zonaOk ? 'Si' : 'No',
-      puesto: ins.puesto,
+      puesto: ins.puesto || 0,
       obs: ins.obs || ''
     });
+    console.log('Guardando en edición:', edicionActiva, 'puesto:', ins.puesto);
     const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
     const data = await res.json();
     return data.ok;
@@ -926,7 +927,7 @@ function distanciaReal(p1, p2) {
 
 // Umbral de distancia mínima entre rubros de la misma familia (en px del mapa 500x500)
 // ~80px equivale a aprox 2 puestos de distancia física
-const DISTANCIA_MIN_RUBRO = 90;
+const DISTANCIA_MIN_RUBRO = 120; // ~4 puestos de distancia física en el mapa
 
 // Vecinos geográficos entre distintos bordes (esquinas y puntos de contacto)
 const VECINOS_EXTRA = {
@@ -1000,7 +1001,19 @@ function puntajeConTamaño(puesto, rubro, tamaño){
 }
 
 // Versión principal — usa lista de libres reales pasada como parámetro
-function asignarPuestoDesdeLibres(libres, rubro, zona, tamaño){
+// Detecta zona preferida mencionada en observaciones
+function zonaDesdeObservaciones(obs) {
+  if(!obs) return null;
+  const o = obs.toLowerCase();
+  if(o.includes('fray luis') || o.includes('norte') || o.includes('beltran')) return 'norte';
+  if(o.includes('leodegario') || o.includes('sur') || o.includes('cordova')) return 'sur';
+  if(o.includes('emilia c') || o.includes('este')) return 'este';
+  if(o.includes('eraclio') || o.includes('ferreyra') || o.includes('oeste')) return 'oeste';
+  if(o.includes('centro') || o.includes('sendero') || o.includes('medio')) return 'centro';
+  return null;
+}
+
+function asignarPuestoDesdeLibres(libres, rubro, zona, tamaño, obs){
   if(!libres.length) return {puesto:null, zonaOk:false};
   const scorer = (p) => {
     const conflicto = puntaje(p, rubro) * 10;
@@ -1013,6 +1026,10 @@ function asignarPuestoDesdeLibres(libres, rubro, zona, tamaño){
     }
     return conflicto + penTam;
   };
+  // Si hay zona en observaciones y no eligió zona explícita, usarla como preferencia
+  const zonaObs = zonaDesdeObservaciones(obs);
+  if(zonaObs && (!zona || zona === 'ninguna')) zona = zonaObs;
+
   if(zona && zona!=='ninguna'){
     const enZona = libres.filter(p=>zonaDePuesto(p)===zona);
     if(enZona.length){
@@ -1024,9 +1041,9 @@ function asignarPuestoDesdeLibres(libres, rubro, zona, tamaño){
 }
 
 // Versión legacy — para compatibilidad interna
-function asignarPuesto(rubro, zona, tamaño){
+function asignarPuesto(rubro, zona, tamaño, obs){
   const libres = puestosLibres();
-  return asignarPuestoDesdeLibres(libres, rubro, zona, tamaño);
+  return asignarPuestoDesdeLibres(libres, rubro, zona, tamaño, obs);
 }
 
 // ── INSCRIBIR ──
@@ -1091,7 +1108,7 @@ async function inscribir(){
     }
 
     // PASO 4: Asignar usando solo los puestos realmente libres
-    const{puesto,zonaOk} = asignarPuestoDesdeLibres(libresReales, rubro, zonaSeleccionada, tamaño);
+    const{puesto,zonaOk} = asignarPuestoDesdeLibres(libresReales, rubro, zonaSeleccionada, tamaño, obs);
 
     if(!puesto){
       alert('¡La feria está completa! No quedan puestos disponibles.');
@@ -1235,13 +1252,20 @@ async function cargarEdiciones() {
   if(!sel) return;
   const eds = await apiListarEdiciones();
   sel.innerHTML = '';
-  const opciones = eds.length ? eds : ['Junio 2026'];
-  opciones.forEach(e => {
+  const opciones = eds.length ? eds : [edicionActiva];
+  // Ordenar: edición activa primero, luego el resto en orden inverso (más reciente primero)
+  const ordenadas = [
+    edicionActiva,
+    ...opciones.filter(e => e !== edicionActiva).reverse()
+  ].filter((e,i,arr) => arr.indexOf(e) === i); // deduplicar
+  ordenadas.forEach(e => {
     const opt = document.createElement('option');
     opt.value = e; opt.textContent = e;
     if(e === edicionActiva) opt.selected = true;
     sel.appendChild(opt);
   });
+  // Asegurar que el selector muestre la edición activa
+  sel.value = edicionActiva;
 }
 
 function cambiarEdicion(val) {
@@ -1396,7 +1420,7 @@ function exportarCSV(){
   const csv=[H,...R].map(r=>r.map(v=>`"${v||''}"`).join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download='feria-emilia-junio-2026.csv';a.click();
+  a.download='feria-emilia-julio-2026.csv';a.click();
 }
 
 function renderMapa(){
@@ -1426,8 +1450,8 @@ function renderMapa(){
 }
 
 // ── APERTURA ──
-let aperturaLocal   = new Date('2026-06-01T08:00:00');
-let aperturaGeneral = new Date('2026-06-03T08:00:00');
+let aperturaLocal   = new Date('2026-06-30T08:00:00'); // locales: abierto desde ya
+let aperturaGeneral = new Date('2026-07-05T08:00:00'); // general: 5 de julio
 
 function formatFechaApertura(d){
   return d.toLocaleDateString('es-AR',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})+' hs';
@@ -1537,7 +1561,12 @@ function switchView(view,btn){
   btn.classList.add('active');
   if(view==='admin'){
     renderAdmin();
-    cargarEdiciones().then(()=>cargarDesdeSheets(edicionActiva));
+    cargarEdiciones().then(()=>{
+      // Garantizar que edicionActiva no fue sobreescrita
+      const sel = document.getElementById('sel-edicion');
+      if(sel) sel.value = edicionActiva;
+      cargarDesdeSheets(edicionActiva);
+    });
   }
 }
 
@@ -1619,7 +1648,7 @@ if(_modalLogin) _modalLogin.addEventListener('click', function(e) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
       <div style="display:flex;flex-direction:column;gap:4px;">
         <label style="font-size:.67rem;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);">Fecha del evento</label>
-        <input type="text" id="e-fecha" value="Sábado 13 de junio de 2026" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 11px;color:white;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+        <input type="text" id="e-fecha" value="Domingo 12 de julio de 2026" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 11px;color:white;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;">
         <label style="font-size:.67rem;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);">Lugar</label>
@@ -1656,11 +1685,11 @@ if(_modalLogin) _modalLogin.addEventListener('click', function(e) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:.67rem;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);">Apertura para locales</label>
-            <input type="datetime-local" id="e-apertura-local" value="2026-06-01T08:00" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 11px;color:white;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+            <input type="datetime-local" id="e-apertura-local" value="2026-07-01T08:00" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 11px;color:white;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:.67rem;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);">Apertura general</label>
-            <input type="datetime-local" id="e-apertura-general" value="2026-06-03T08:00" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 11px;color:white;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+            <input type="datetime-local" id="e-apertura-general" value="2026-07-05T08:00" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 11px;color:white;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
           </div>
         </div>
       </div>
