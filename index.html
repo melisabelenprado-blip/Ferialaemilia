@@ -808,7 +808,7 @@ function mapearInscripto(row) {
     gazebo: row['Gazebo'] === 'Si' || row['Gazebo'] === 'Sí',
     barrio: row['Barrio'] || '',
     esLocal: row['Local'] === 'Si' || row['Local'] === 'Sí',
-    zona: claveZona(row['Zona pedida'] || ''),
+    zona: claveZona(row['Zona pedida'] || row['Zona Pedida'] || ''),
     zonaOk: row['Zona ok'] === 'Si' || row['Zona ok'] === 'Sí',
     puesto,
     obs: row['Observaciones'] || '',
@@ -1083,14 +1083,17 @@ async function inscribir(){
   try {
     // PASO 1: Obtener puestos ocupados en tiempo real desde Sheets
     const rowsActuales = await apiObtenerInscriptos(edicionActiva);
-    // Obtener puestos ocupados — buscar puesto en cada fila sin importar nombre de columna ID
+    // Obtener puestos ocupados — deduplicados por ID para evitar filas duplicadas
+    const idsVistos = new Set();
     const puestosOcupados = new Set(
       rowsActuales
-        .map(r => {
-          // Intentar leer el puesto directamente — si tiene un número válido de puesto, está ocupado
-          const puesto = parseInt(r['Puesto'] || r['puesto'] || 0);
-          return puesto;
+        .filter(r => {
+          const id = r['ID'] || r[' '] || 0;
+          if(!id || idsVistos.has(String(id))) return false;
+          idsVistos.add(String(id));
+          return true;
         })
+        .map(r => parseInt(r['Puesto'] || r['puesto'] || 0))
         .filter(p => p > 0 && p <= 70)
     );
     console.log('Puestos ocupados en Sheets:', Array.from(puestosOcupados).sort((a,b)=>a-b));
