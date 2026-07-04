@@ -560,6 +560,11 @@
   </div>
   <div class="stats-row" id="stats-row"></div>
   <div class="filtros" id="filtros-rubros"></div>
+  <!-- Barra de intercambio -->
+  <div id="swap-bar" style="display:none;background:#fff8e1;border:1.5px solid #f0c040;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:none;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:.85rem;color:#7a5c00;">⇄ <strong>Intercambio:</strong> <span id="swap-info">Seleccioná el primer inscripto tocando ⇄</span></span>
+    <button onclick="cancelarIntercambio()" style="margin-left:auto;padding:5px 12px;border:1px solid #f0c040;border-radius:8px;background:white;color:#7a5c00;font-family:'DM Sans',sans-serif;font-size:.8rem;cursor:pointer;">Cancelar</button>
+  </div>
   <div class="tabla-container">
     <table>
       <thead>
@@ -1324,8 +1329,12 @@ function renderTabla(){
     const r=RUBROS[i.rubro]||{label:i.rubro,color:'#999',emoji:'?'};
     const libres=[i.puesto,...puestosLibres()].sort((a,b)=>a-b);
     const opts=libres.map(p=>`<option value="${p}" ${p===i.puesto?'selected':''}>${p}</option>`).join('');
-    const zNom=i.zona&&i.zona!=='ninguna'?ZONAS[i.zona]?.label:null;
-    const zBadge=zNom?`<span class="badge-zona ${i.zonaOk?'zona-ok':'zona-alt'}">${zNom}${i.zonaOk?'':' ⚠️'}</span>`:'<span style="color:#ccc">—</span>';
+    const ZONA_ABREV = {norte:'N ↑',sur:'S ↓',este:'E →',oeste:'O ←',centro:'Centro'};
+    const zNom = i.zona && i.zona!=='ninguna' ? ZONAS[i.zona]?.label : null;
+    const zAbrev = i.zona && i.zona!=='ninguna' ? ZONA_ABREV[i.zona] || i.zona : null;
+    const zBadge = zAbrev
+      ? `<span class="badge-zona ${i.zonaOk?'zona-ok':'zona-alt'}" title="${zNom||i.zona}">${zAbrev}${i.zonaOk?'':' ⚠️'}</span>`
+      : '<span style="color:#ccc">—</span>';
     return`<tr style='${!i.pagado?"background:rgba(231,76,60,0.04)":""}'>
       <td><select class="select-puesto" onchange="moverPuesto(${i.id},this.value)">${opts}</select></td>
       <td><strong>${i.emp}</strong></td><td>${i.nombre} ${i.apellido}</td>
@@ -1348,7 +1357,10 @@ function renderTabla(){
           </span>
         </label>
       </td>
-      <td><button class="btn-accion danger" onclick="eliminar(${i.id})">Quitar</button></td>
+      <td style="white-space:nowrap;">
+        <button class="btn-accion" onclick="seleccionarParaIntercambio(${i.id})" id="swap-btn-${i.id}" title="Intercambiar puesto">⇄</button>
+        <button class="btn-accion danger" onclick="eliminar(${i.id})">Quitar</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1555,6 +1567,68 @@ function mostrarAliasCopiado() {
   setTimeout(() => {
     if(btn) { btn.innerHTML = '💳 Pagar con cualquier billetera'; btn.style.background = ''; }
   }, 4000);
+}
+
+// ── INTERCAMBIO DE PUESTOS ──
+let swapPrimero = null;
+
+function seleccionarParaIntercambio(id) {
+  const bar = document.getElementById('swap-bar');
+  const info = document.getElementById('swap-info');
+
+  if (!swapPrimero) {
+    // Primer seleccionado
+    swapPrimero = id;
+    const ins = inscriptos.find(i => i.id === id);
+    bar.style.display = 'flex';
+    info.innerHTML = `Primero: <strong>${ins.emp} (Puesto ${ins.puesto})</strong> — ahora seleccioná el segundo ⇄`;
+    // Resaltar botón
+    const btn = document.getElementById(`swap-btn-${id}`);
+    if(btn) { btn.style.background = '#fff8e1'; btn.style.borderColor = '#f0c040'; }
+  } else {
+    if (swapPrimero === id) { cancelarIntercambio(); return; }
+    // Segundo seleccionado — hacer el swap
+    const ins1 = inscriptos.find(i => i.id === swapPrimero);
+    const ins2 = inscriptos.find(i => i.id === id);
+    if (!ins1 || !ins2) { cancelarIntercambio(); return; }
+
+    const puesto1 = ins1.puesto;
+    const puesto2 = ins2.puesto;
+
+    if (!confirm(`¿Intercambiar puestos?
+
+${ins1.emp} (${puesto1}) ↔ ${ins2.emp} (${puesto2})`)) {
+      cancelarIntercambio(); return;
+    }
+
+    // Swap en memoria
+    ins1.puesto = puesto2;
+    ins2.puesto = puesto1;
+
+    // Guardar en Sheets
+    apiActualizarPuesto(ins1.id, puesto2);
+    apiActualizarPuesto(ins2.id, puesto1);
+
+    cancelarIntercambio();
+    renderAdmin();
+
+    // Aviso de éxito
+    const aviso = document.createElement('div');
+    aviso.textContent = `✅ Puestos intercambiados: ${ins1.emp} → ${puesto2} | ${ins2.emp} → ${puesto1}`;
+    aviso.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#3d9970;color:white;padding:12px 24px;border-radius:10px;font-family:DM Sans,sans-serif;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);white-space:nowrap;';
+    document.body.appendChild(aviso);
+    setTimeout(() => aviso.remove(), 4000);
+  }
+}
+
+function cancelarIntercambio() {
+  if(swapPrimero) {
+    const btn = document.getElementById(`swap-btn-${swapPrimero}`);
+    if(btn) { btn.style.background = ''; btn.style.borderColor = ''; }
+  }
+  swapPrimero = null;
+  const bar = document.getElementById('swap-bar');
+  if(bar) bar.style.display = 'none';
 }
 
 function switchView(view,btn){
